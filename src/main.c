@@ -26,24 +26,24 @@ extern char *optarg;
 extern int optind;
 
 const struct function_list func_list[] = {
-	{"detect", FUNC_IDX_DETECT},
-	{"smb-send-byte", FUNC_IDX_SMB_SEND_BYTE},
-	{"smb-write-byte", FUNC_IDX_SMB_WRITE_BYTE},
-	{"smb-write-word", FUNC_IDX_SMB_WRITE_WORD},
-	{"smb-write-32", FUNC_IDX_SMB_WRITE_32},
-	{"smb-write-64", FUNC_IDX_SMB_WRITE_64},
-	{"smb-block-write", FUNC_IDX_SMB_BLOCK_WRITE},
+	{"detect",            FUNC_IDX_DETECT},
+	{"smb-send-byte",     FUNC_IDX_SMB_SEND_BYTE},
+	{"smb-write-byte",    FUNC_IDX_SMB_WRITE_BYTE},
+	{"smb-write-word",    FUNC_IDX_SMB_WRITE_WORD},
+	{"smb-write-32",      FUNC_IDX_SMB_WRITE_32},
+	{"smb-write-64",      FUNC_IDX_SMB_WRITE_64},
+	{"smb-block-write",   FUNC_IDX_SMB_BLOCK_WRITE},
 	// SMBus Address Resolution Protocol
-	{"prepare-to-arp", FUNC_IDX_SMB_PREPARE_TO_ARP},
-	{"get-udid", FUNC_IDX_SMB_GET_UDID},
-	{"reset-device", FUNC_IDX_SMB_RESET_DEVICE},
-	{"assign-address", FUNC_IDX_SMB_ASSIGN_ADDR},
+	{"prepare-to-arp",    FUNC_IDX_SMB_PREPARE_TO_ARP},
+	{"get-udid",          FUNC_IDX_SMB_GET_UDID},
+	{"reset-device",      FUNC_IDX_SMB_RESET_DEVICE},
+	{"assign-address",    FUNC_IDX_SMB_ASSIGN_ADDR},
 	// Application
-	{"smb-write-file", FUNC_IDX_SMB_WRITE_FILE},
-	{"test-mctp", FUNC_IDX_TEST_MCTP},
-	// {"i2c-write-file", FUNC_IDX_I2C_MASTER_WRITE_FILE},
-	// {"i2c-slave-poll", FUNC_IDX_I2C_SLAVE_POLL},
-	// {"smb-dev-poll", FUNC_IDX_SMB_DEVICE_POLL},
+	{"smb-write-file",    FUNC_IDX_SMB_WRITE_FILE},
+	{"test-mctp",         FUNC_IDX_TEST_MCTP},
+	// {"i2c-write-file",    FUNC_IDX_I2C_MASTER_WRITE_FILE},
+	// {"i2c-slave-poll",    FUNC_IDX_I2C_SLAVE_POLL},
+	// {"smb-dev-poll",      FUNC_IDX_SMB_DEVICE_POLL},
 	// {"test-smb-ctrl-tar", FUNC_IDX_TEST},
 
 	{NULL}
@@ -71,8 +71,7 @@ int parse_eid(const char *eid_opt)
 	}
 
 	if ((eid != 0) && (eid < 0x08 || eid > 0xfe)) {
-		main_trace(ERROR, "eid '%s' out of range "
-		           "(valid eid is: 0x00, 0x08-0x7e)\n", eid_opt);
+		main_trace(ERROR, "eid '%s' out of range (valid eid is: 0x00, 0x08-0x7e)\n", eid_opt);
 		return -1;
 	}
 
@@ -136,8 +135,7 @@ int parse_i2c_address(const char *addr_opt, int all_addrs)
 	}
 
 	if (address < min_addr || address > max_addr) {
-		main_trace(ERROR, "address '%s' out of range "
-		           "(valid address is: 0x%02lx-0x%02lx)\n",
+		main_trace(ERROR, "address '%s' out of range (valid address is: 0x%02lx-0x%02lx)\n",
 		           addr_opt, min_addr, max_addr);
 		return -1;
 	}
@@ -145,7 +143,7 @@ int parse_i2c_address(const char *addr_opt, int all_addrs)
 	return address;
 }
 
-static int check_argc(int argc, int min, int max)
+static int check_argc_range(int argc, int min, int max)
 {
 	if (argc < min) {
 		main_trace(ERROR, "too few arguments\n");
@@ -158,8 +156,7 @@ static int check_argc(int argc, int min, int max)
 	return 0;
 }
 
-static void main_exit(int status_code, int handle, int func_idx,
-                      const char *fmt, ...)
+static void main_exit(int status_code, int handle, int func_idx, const char *fmt, ...)
 {
 	/**
 	 * Disable the Aardvark adapter's power pins. This command is only effective
@@ -252,15 +249,13 @@ int main(int argc, char *argv[])
 	}
 
 	if (version)
-		main_exit(EXIT_SUCCESS, 0, -1, "SMBus Host Software Version %s\n",
-		          VERSION);
+		main_exit(EXIT_SUCCESS, 0, -1, "SMBus Host Software Version %s\n", VERSION);
 
 	if (argc < optind + 1) {
 		if (manual)
 			main_exit(EXIT_SUCCESS, 0, FUNC_IDX_MAX, NULL);
 		else
-			main_exit(EXIT_FAILURE, 0, FUNC_IDX_MAX,
-			          "error: too few arguments\n");
+			main_exit(EXIT_FAILURE, 0, FUNC_IDX_MAX, "error: too few arguments\n");
 	}
 
 	// argc == optind + 1
@@ -335,7 +330,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 	case FUNC_IDX_SMB_SEND_BYTE: {
-		if (check_argc(argc, optind + 4, optind + 4))
+		if (check_argc_range(argc, optind + 4, optind + 4))
 			main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 		slv_addr = parse_i2c_address(argv[optind + 2], all_addr);
@@ -345,14 +340,12 @@ int main(int argc, char *argv[])
 		uint32_t data = strtoul(argv[optind + 3], &end, 0);
 		if (*end || errno == -ERANGE) {
 			perror("strtoul");
-			main_exit(EXIT_FAILURE, handle, -1,
-			          "error: invalid data value '%s'\n",
+			main_exit(EXIT_FAILURE, handle, -1, "error: invalid data value '%s'\n",
 			          argv[optind + 3]);
 		}
 
 		if (data > UINT8_MAX)
-			main_exit(EXIT_FAILURE, handle, -1,
-			          "error: data value '%s' out of range\n",
+			main_exit(EXIT_FAILURE, handle, -1, "error: data value '%s' out of range\n",
 			          argv[optind + 3]);
 
 		int ret = smbus_send_byte(handle, slv_addr, data, pec);
@@ -365,7 +358,7 @@ int main(int argc, char *argv[])
 	case FUNC_IDX_SMB_WRITE_WORD:
 	case FUNC_IDX_SMB_WRITE_32:
 	case FUNC_IDX_SMB_WRITE_64: {
-		if (check_argc(argc, optind + 5, optind + 5))
+		if (check_argc_range(argc, optind + 5, optind + 5))
 			main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 		slv_addr = parse_i2c_address(argv[optind + 2], all_addr);
@@ -392,25 +385,21 @@ int main(int argc, char *argv[])
 		uint64_t data = strtoull(argv[optind + 4], &end, 0);
 		if (*end || errno == -EINVAL || errno == -ERANGE) {
 			perror("strtoull");
-			main_exit(EXIT_FAILURE, handle, -1,
-			          "error: invalid data value '%s'\n",
+			main_exit(EXIT_FAILURE, handle, -1, "error: invalid data value '%s'\n",
 			          argv[optind + 4]);
 		}
 
 		if (max && (data > max))
-			main_exit(EXIT_FAILURE, handle, -1,
-			          "error: data value '%s' out of range\n",
+			main_exit(EXIT_FAILURE, handle, -1, "error: data value '%s' out of range\n",
 			          argv[optind + 4]);
 
 		int ret;
 		switch (func_idx) {
 		case FUNC_IDX_SMB_WRITE_BYTE:
-			ret = smbus_write_byte(
-			              handle, slv_addr, cmd_code, (u8)data, pec);
+			ret = smbus_write_byte(handle, slv_addr, cmd_code, (u8)data, pec);
 			break;
 		case FUNC_IDX_SMB_WRITE_WORD:
-			ret = smbus_write_word(
-			              handle, slv_addr, cmd_code, (u16)data, pec);
+			ret = smbus_write_word(handle, slv_addr, cmd_code, (u16)data, pec);
 			break;
 		case FUNC_IDX_SMB_WRITE_32:
 			ret = smbus_write32(handle, slv_addr, cmd_code, (u32)data, pec);
@@ -426,7 +415,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 	case FUNC_IDX_SMB_BLOCK_WRITE: {
-		if (check_argc(argc, optind + 5, optind + 4 + sizeof(block)))
+		if (check_argc_range(argc, optind + 5, optind + 4 + sizeof(block)))
 			main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 		slv_addr = parse_i2c_address(argv[optind + 2], all_addr);
@@ -441,13 +430,11 @@ int main(int argc, char *argv[])
 		for (byte_cnt = 0; byte_cnt < argc - (optind + 4); byte_cnt++) {
 			value = strtol(argv[byte_cnt + optind + 4], &end, 0);
 			if (*end || value < 0)
-				main_exit(EXIT_FAILURE, handle, -1,
-				          "error: invalid data value '%s'\n",
+				main_exit(EXIT_FAILURE, handle, -1, "error: invalid data value '%s'\n",
 				          argv[byte_cnt + optind + 4]);
 
 			if (value > 0xff)
-				main_exit(EXIT_FAILURE, handle, -1,
-				          "error: data value '%s' out of range\n",
+				main_exit(EXIT_FAILURE, handle, -1, "error: data value '%s' out of range\n",
 				          argv[byte_cnt + optind + 4]);
 
 			block[byte_cnt] = value;
@@ -462,7 +449,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 	case FUNC_IDX_SMB_PREPARE_TO_ARP: {
-		if (check_argc(argc, optind + 2, optind + 2))
+		if (check_argc_range(argc, optind + 2, optind + 2))
 			main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 		int ret = smbus_arp_cmd_prepare_to_arp(handle, pec);
@@ -474,20 +461,19 @@ int main(int argc, char *argv[])
 	case FUNC_IDX_SMB_GET_UDID: {
 		slv_addr = 0;
 		if (directed) {
-			if (check_argc(argc, optind + 3, optind + 3))
+			if (check_argc_range(argc, optind + 3, optind + 3))
 				main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 			slv_addr = parse_i2c_address(argv[optind + 2], all_addr);
 			if (slv_addr < 0)
 				goto out;
 		} else {
-			if (check_argc(argc, optind + 2, optind + 2))
+			if (check_argc_range(argc, optind + 2, optind + 2))
 				main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 		}
 
 		union udid_ds udid;
-		int ret = smbus_arp_cmd_get_udid(handle, (void *)&udid, slv_addr,
-		                                 directed, pec);
+		int ret = smbus_arp_cmd_get_udid(handle, &udid, slv_addr, directed, pec);
 		if (ret)
 			main_exit(EXIT_FAILURE, handle, -1, NULL);
 
@@ -498,14 +484,14 @@ int main(int argc, char *argv[])
 	case FUNC_IDX_SMB_RESET_DEVICE: {
 		slv_addr = 0;
 		if (directed) {
-			if (check_argc(argc, optind + 3, optind + 3))
+			if (check_argc_range(argc, optind + 3, optind + 3))
 				main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 			slv_addr = parse_i2c_address(argv[optind + 2], all_addr);
 			if (slv_addr < 0)
 				goto out;
 		} else {
-			if (check_argc(argc, optind + 2, optind + 2))
+			if (check_argc_range(argc, optind + 2, optind + 2))
 				main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 		}
 
@@ -517,22 +503,19 @@ int main(int argc, char *argv[])
 	}
 	case FUNC_IDX_SMB_ASSIGN_ADDR: {
 		union udid_ds udid;
-		if (check_argc(argc, optind + 3 + sizeof(udid),
-		               optind + 3 + sizeof(udid)))
+		if (check_argc_range(argc, optind + 3 + sizeof(udid), optind + 3 + sizeof(udid)))
 			main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 		int byte_cnt, value;
 		for (byte_cnt = 0; byte_cnt < argc - (optind + 3); byte_cnt++) {
 			value = strtol(argv[byte_cnt + optind + 2], &end, 0);
 			if (*end || value < 0) {
-				main_trace(ERROR, "invalid data value '%s'\n",
-				           argv[byte_cnt + optind + 2]);
+				main_trace(ERROR, "invalid data value '%s'\n", argv[byte_cnt + optind + 2]);
 				goto out;
 			}
 
 			if (value > 0xff) {
-				main_trace(ERROR, "data value '%s' out of range\n",
-				           argv[byte_cnt + optind + 2]);
+				main_trace(ERROR, "data value '%s' out of range\n", argv[byte_cnt + optind + 2]);
 				goto out;
 			}
 
@@ -552,7 +535,7 @@ int main(int argc, char *argv[])
 		break;
 	}
 	case FUNC_IDX_SMB_WRITE_FILE: {
-		if (check_argc(argc, optind + 5, optind + 5))
+		if (check_argc_range(argc, optind + 5, optind + 5))
 			main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 		slv_addr = parse_i2c_address(argv[optind + 2], all_addr);
@@ -579,7 +562,7 @@ int main(int argc, char *argv[])
 		u8 host_addr;
 		int owner_eid, tar_eid;
 
-		if (check_argc(argc, optind + 5, optind + 5))
+		if (check_argc_range(argc, optind + 5, optind + 5))
 			main_exit(EXIT_FAILURE, handle, func_idx, NULL);
 
 		if (i2c_slave_mode) {
@@ -591,18 +574,17 @@ int main(int argc, char *argv[])
 
 		aa_i2c_slave_enable(handle, host_addr, 0, 0);
 
-		int i = optind + 2;
-		slv_addr = parse_i2c_address(argv[i++], all_addr);
+		slv_addr = parse_i2c_address(argv[optind + 2], all_addr);
 		if (slv_addr < 0)
 			goto out;
 
-		owner_eid = parse_eid(argv[i++]);
+		owner_eid = parse_eid(argv[optind + 3]);
 		if (owner_eid < 0 || owner_eid < 8) {
 			main_trace(ERROR, "wrong owner_eid (%d)\n", owner_eid);
 			goto out;
 		}
 
-		tar_eid = parse_eid(argv[i++]);
+		tar_eid = parse_eid(argv[optind + 4]);
 		if (tar_eid < 0 || tar_eid < 8 || owner_eid == tar_eid) {
 			main_trace(ERROR, "wrong tar_eid (%d,%d)\n", owner_eid, tar_eid);
 			goto out;
@@ -650,8 +632,7 @@ int main(int argc, char *argv[])
 			goto out;
 		}
 
-		ret = mctp_message_set_eid(slv_addr, EID_NULL_DST, SET_EID,
-		                           tar_eid, 1, 0);
+		ret = mctp_message_set_eid(slv_addr, EID_NULL_DST, SET_EID, tar_eid, 1, 0);
 		if (ret) {
 			main_trace(ERROR, "mctp_message_set_eid (%d)\n", ret);
 			goto out;

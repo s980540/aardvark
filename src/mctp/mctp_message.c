@@ -23,9 +23,9 @@ u16 mctp_message_append_mic(void *msg, u16 msg_size)
 	return msg_size + sizeof(mic);
 }
 
-int mctp_send_control_request_message(
-        u8 slv_addr, u8 dst_eid, enum mctp_ctrl_cmd_code cmd_code,
-        union mctp_ctrl_message *msg, size_t req_size, bool ic, bool retry)
+int mctp_send_control_request_message(u8 slv_addr, u8 dst_eid, enum mctp_ctrl_cmd_code cmd_code,
+                                      union mctp_ctrl_message *msg, size_t req_size,
+                                      bool ic, bool retry)
 {
 	memset(msg, 0, sizeof(msg->ctrl_msg_head));
 	u16 msg_size = sizeof(msg->ctrl_msg_head) + req_size;
@@ -55,9 +55,8 @@ int mctp_send_control_request_message(
 	mctp_trace(DEBUG, "crc: %x\n",
 	           ~crc32_le_generic(CRC_INIT, msg, msg_size - 4, REVERSED_POLY_CRC32));
 
-	return mctp_transport_send_message(
-	               slv_addr, dst_eid, msg, msg_size,
-	               MCTP_MSG_TYPE_NVME_MM, 1);
+	return mctp_transport_send_message(slv_addr, dst_eid, msg, msg_size,
+	                                   MCTP_MSG_TYPE_NVME_MM, 1);
 }
 
 int mctp_message_set_eid(u8 slv_addr, u8 dst_eid, enum set_eid_operation oper,
@@ -79,9 +78,8 @@ int mctp_message_set_eid(u8 slv_addr, u8 dst_eid, enum set_eid_operation oper,
 	print_buf(msg->msg_data, sizeof(*req_data), "[%s]: req data (%d)",
 	          __func__, (u32)sizeof(*req_data));
 
-	ret = mctp_send_control_request_message(
-	              slv_addr, dst_eid, MCTP_CTRL_MSG_SET_EID, msg,
-	              sizeof(*req_data), ic, retry);
+	ret = mctp_send_control_request_message(slv_addr, dst_eid, MCTP_CTRL_MSG_SET_EID,
+	                                        msg, sizeof(*req_data), ic, retry);
 	if (ret)
 		mctp_trace(ERROR, "mctp_send_control_request_message (%d)\n", ret);
 
@@ -110,32 +108,28 @@ u8 mctp_ctrl_resp_set_eid(const union mctp_ctrl_message *msg)
 	const union mctp_resp_data_set_eid *resp_data = (void *)msg->msg_data;
 
 	mctp_trace(INFO, "Set Endpoint ID response message:\n");
-	mctp_trace(INFO, "Completion code = %x\n", cmpl_code);
-	mctp_trace(INFO, "Endpoint ID Allocation Status = %s\n",
-	           eid_alloc_sts[resp_data->eid_alloc_sts]);
-	mctp_trace(INFO, "EID Assignment Status = %s\n",
-	           eid_assign_sts[resp_data->eid_assign_sts]);
-	mctp_trace(INFO, "EID Setting = %x\n", resp_data->eid_setting);
-	mctp_trace(INFO, "EID Pool Size = %x\n", resp_data->eid_poll_size);
+	mctp_trace(INFO, "Completion code               : %x\n", cmpl_code);
+	mctp_trace(INFO, "Endpoint ID Allocation Status : %s\n", eid_alloc_sts[resp_data->eid_alloc_sts]);
+	mctp_trace(INFO, "EID Assignment Status         : %s\n", eid_assign_sts[resp_data->eid_assign_sts]);
+	mctp_trace(INFO, "EID Setting                   : %x\n", resp_data->eid_setting);
+	mctp_trace(INFO, "EID Pool Size                 : %x\n", resp_data->eid_poll_size);
 	mctp_trace(INFO, "\n");
 
 	return cmpl_code;
 }
 
-static int mctp_control_request_message_handle(
-        const union mctp_ctrl_message *msg, u16 size)
+static int mctp_control_request_message_handle(const union mctp_ctrl_message *msg, u16 size)
 {
 	return MCTP_SUCCESS;
 }
 
-static int mctp_control_response_message_handle(
-        const union mctp_ctrl_message *msg, u16 size)
+static int mctp_control_response_message_handle(const union mctp_ctrl_message *msg, u16 size)
 {
 	u8 cmpl_code = MCTP_CMPL_SUCCESS;
 	u8 cmd_code = msg->ctrl_msg_head.cmd_code;
 	// const void *resp_data = msg->msg_data;
 
-	mctp_trace(INFO, "mctp response = %d\n", cmd_code);
+	mctp_trace(INFO, "mctp response: %d\n", cmd_code);
 
 	switch (cmd_code) {
 	case MCTP_CTRL_MSG_SET_EID:
@@ -146,8 +140,7 @@ static int mctp_control_response_message_handle(
 	return cmpl_code;
 }
 
-static int mctp_control_message_handle(
-        const union mctp_ctrl_message *msg, u16 size)
+static int mctp_control_message_handle(const union mctp_ctrl_message *msg, u16 size)
 {
 	u8 cmpl_code;
 
@@ -164,8 +157,7 @@ static int mctp_control_message_handle(
 	}
 }
 
-static int mctp_nvme_mm_handle(
-        const union mctp_message *msg, u16 size)
+static int mctp_nvme_mm_handle(const union mctp_message *msg, u16 size)
 {
 	return MCTP_SUCCESS;
 }

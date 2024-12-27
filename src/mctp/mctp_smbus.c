@@ -38,8 +38,7 @@ int mctp_smbus_check_packet(const union mctp_smbus_header *medi_head)
 	return MCTP_SUCCESS;
 }
 
-int mctp_smbus_transmit_packet(
-        u8 dst_slv_addr, union mctp_smbus_packet *pkt, u8 tran_size)
+int mctp_smbus_transmit_packet(u8 dst_slv_addr, union mctp_smbus_packet *pkt, u8 tran_size)
 {
 	int ret;
 
@@ -47,8 +46,7 @@ int mctp_smbus_transmit_packet(
 		return -MCTP_SMBUS_ERR_UNSUP_TRAN_UNIT;
 	}
 
-	pkt->medi_head.src_slv_addr
-	        = m_mctp_smbus_mgr.src_slv_addr << 1 | MCTP_OVER_SMBUS;
+	pkt->medi_head.src_slv_addr = m_mctp_smbus_mgr.src_slv_addr << 1 | MCTP_OVER_SMBUS;
 
 	ret = smbus_block_write(m_mctp_smbus_mgr.handle,
 	                        dst_slv_addr,

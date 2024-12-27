@@ -29,9 +29,9 @@ void mctp_transport_update_addr(u8 addr, u8 eid)
 	m_mctp_addr_map[eid] = addr;
 }
 
-int mctp_transport_transmit_packet(
-        u8 slv_addr, union mctp_smbus_packet *pkt, const void *payload,
-        u8 tran_size, u8 retry, bool eom)
+int mctp_transport_transmit_packet(u8 slv_addr, union mctp_smbus_packet *pkt,
+                                   const void *payload, u8 tran_size, u8 retry,
+                                   bool eom)
 {
 	int ret;
 
@@ -62,8 +62,7 @@ int mctp_transport_transmit_packet(
 	// timer = xxx
 
 	tran_size += sizeof(pkt->tran_head);
-	print_buf(&pkt->tran_head, tran_size, "[%s]: pkt (%d)",
-	          __func__, tran_size);
+	print_buf(&pkt->tran_head, tran_size, "[%s]: pkt (%d)", __func__, tran_size);
 
 	ret = mctp_smbus_transmit_packet(slv_addr, pkt, tran_size);
 	if (ret)
@@ -72,9 +71,8 @@ int mctp_transport_transmit_packet(
 	return ret;
 }
 
-int mctp_transport_send_message(
-        u8 slv_addr, u8 dst_eid, const void *msg, u16 msg_size, u8 msg_tag,
-        u8 tag_owner)
+int mctp_transport_send_message(u8 slv_addr, u8 dst_eid, const void *msg,
+                                u16 msg_size, u8 msg_tag, u8 tag_owner)
 {
 	int ret = -MCTP_ERROR;
 
@@ -115,9 +113,8 @@ int mctp_transport_send_message(
 		               ? m_mctp_tran_mgr.nego_size
 		               : msg_size;
 
-		ret = mctp_transport_transmit_packet(
-		              slv_addr, pkt, msg, tran_size, retry,
-		              msg_size <= m_mctp_tran_mgr.nego_size);
+		ret = mctp_transport_transmit_packet(slv_addr, pkt, msg, tran_size, retry,
+		                                     msg_size <= m_mctp_tran_mgr.nego_size);
 		if (ret) {
 			mctp_trace(ERROR, "mctp_transport_transmit_packet (%d)\n", ret);
 			break;
@@ -175,14 +172,13 @@ bool mctp_transport_eom_received(void)
 int mctp_transport_verify_mic(const union mctp_message *msg)
 {
 	const u8 *mic = msg->data + m_mctp_tran_mgr.msg_size - 4;
-	u32 crc1
-	        = ((u32)mic[0])
-	          + ((u32)mic[1] << 8)
-	          + ((u32)mic[2] << 16)
-	          + ((u32)mic[3] << 24);
+	u32 crc1 = ((u32)mic[0])
+	           + ((u32)mic[1] << 8)
+	           + ((u32)mic[2] << 16)
+	           + ((u32)mic[3] << 24);
 
-	u32 crc2 = ~crc32_le_generic(
-	                   CRC_INIT, msg, m_mctp_tran_mgr.msg_size - 4, REVERSED_POLY_CRC32);
+	u32 crc2 = ~crc32_le_generic(CRC_INIT, msg, m_mctp_tran_mgr.msg_size - 4,
+	                             REVERSED_POLY_CRC32);
 
 	// if (crc1 != crc2)
 	{
@@ -250,10 +246,9 @@ int mctp_transport_check_packet(const union mctp_smbus_packet *pkt)
 		return -MCTP_TRAN_ERR_UNKNO_DST_EID;
 	}
 
-	u16 plen
-	        = pkt->medi_head.byte_cnt
-	          - sizeof(pkt->medi_head.src_slv_addr)
-	          - sizeof(pkt->tran_head);
+	u16 plen = pkt->medi_head.byte_cnt
+	           - sizeof(pkt->medi_head.src_slv_addr)
+	           - sizeof(pkt->tran_head);
 
 	/**
 	 * Unsupported transmission unit: The transmission unit size is not
@@ -329,8 +324,7 @@ int mctp_transport_check_packet(const union mctp_smbus_packet *pkt)
 	 */
 	if ((!tran_head->tag_owner && !m_mctp_tran_mgr.req_sent)
 	    || (tran_head->tag_owner && m_mctp_tran_mgr.req_sent)) {
-		mctp_trace(ERROR,
-		           "bad, unexpected, or expired message tag (%d,%d)\n",
+		mctp_trace(ERROR, "bad, unexpected, or expired message tag (%d,%d)\n",
 		           tran_head->tag_owner, m_mctp_tran_mgr.req_sent);
 		return -MCTP_TRAN_ERR_BAD_MSG_TAG;
 	}
@@ -405,15 +399,11 @@ int mctp_transport_init(u8 owner_eid, u8 tar_eid, u16 nego_size)
 	m_mctp_tran_mgr.nego_size = nego_size;
 	m_mctp_tran_mgr.max_msg_size = MCTP_MSG_SIZE_MAX;
 
-	mctp_trace(INIT, "owner = 0x%02x, eid = 0x%02x\n",
-	           m_mctp_tran_mgr.owner_eid, m_mctp_tran_mgr.tar_eid);
-	mctp_trace(INIT, "sizeof(m_mctp_tran_mgr) = %d\n",
-	           (u32)sizeof(m_mctp_tran_mgr));
-
-	mctp_trace(INIT, "negotiated transfer size = %d\n",
-	           m_mctp_tran_mgr.nego_size);
-	mctp_trace(INIT, "maximum message size = %d\n",
-	           m_mctp_tran_mgr.max_msg_size);
+	mctp_trace(INIT, "owner = 0x%02x, eid = 0x%02x\n", m_mctp_tran_mgr.owner_eid,
+	           m_mctp_tran_mgr.tar_eid);
+	mctp_trace(INIT, "sizeof(m_mctp_tran_mgr) = %d\n", (u32)sizeof(m_mctp_tran_mgr));
+	mctp_trace(INIT, "negotiated transfer size = %d\n", m_mctp_tran_mgr.nego_size);
+	mctp_trace(INIT, "maximum message size = %d\n", m_mctp_tran_mgr.max_msg_size);
 
 	return MCTP_SUCCESS;
 }

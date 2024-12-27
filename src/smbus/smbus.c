@@ -1,4 +1,3 @@
-
 #include "aardvark.h"
 #include "smbus.h"
 #include "crc.h"
@@ -98,7 +97,7 @@ static int smbus_verify_byte_read(int num_bytes, int num_read)
 int smbus_send_byte(Aardvark handle, u8 slv_addr, u8 u8_data, bool pec_flag)
 {
 	int num_written, num_bytes;
-	data[0] = slv_addr << 1;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	data[1] = u8_data;
 	num_bytes = 1;
 
@@ -108,20 +107,17 @@ int smbus_send_byte(Aardvark handle, u8 slv_addr, u8 u8_data, bool pec_flag)
 	}
 
 	// Write the data to the bus
-	num_written = aa_i2c_write(handle, slv_addr, AA_I2C_NO_FLAGS,
-	                           num_bytes, &data[1]);
-
+	num_written = aa_i2c_write(handle, slv_addr, AA_I2C_NO_FLAGS, num_bytes, &data[1]);
 	if (smbus_verify_byte_written(num_bytes, num_written))
 		return -1;
 
 	return 0;
 }
 
-int smbus_write_byte(Aardvark handle, u8 slv_addr, u8 cmd_code, u8 u8_data,
-                     bool pec_flag)
+int smbus_write_byte(Aardvark handle, u8 slv_addr, u8 cmd_code, u8 u8_data, bool pec_flag)
 {
 	int num_written, num_bytes;
-	data[0] = slv_addr;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	data[1] = cmd_code;
 	data[2] = u8_data;
 	num_bytes = 2;
@@ -131,23 +127,20 @@ int smbus_write_byte(Aardvark handle, u8 slv_addr, u8 cmd_code, u8 u8_data,
 		data[num_bytes] = crc8(data, num_bytes);
 	}
 
-	num_written = aa_i2c_write(handle, slv_addr >> 1, AA_I2C_NO_FLAGS,
-	                           num_bytes, &data[1]);
-
+	num_written = aa_i2c_write(handle, slv_addr, AA_I2C_NO_FLAGS, num_bytes, &data[1]);
 	if (smbus_verify_byte_written(num_bytes, num_written))
 		return -1;
 
 	return 0;
 }
 
-int smbus_write_word(Aardvark handle, u8 slv_addr, u8 cmd_code, u16 u16_data,
-                     bool pec_flag)
+int smbus_write_word(Aardvark handle, u8 slv_addr, u8 cmd_code, u16 u16_data, bool pec_flag)
 {
 	int num_written, num_bytes;
-	data[0] = slv_addr;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	data[1] = cmd_code;
-	data[2] = u16_data & 0xFF;
-	data[3] = u16_data >> 8;
+	data[2] = (u16_data >>  0) & 0xFF;
+	data[3] = (u16_data >>  8);
 	num_bytes = 3;
 
 	if (pec_flag) {
@@ -155,25 +148,22 @@ int smbus_write_word(Aardvark handle, u8 slv_addr, u8 cmd_code, u16 u16_data,
 		data[num_bytes] = crc8(data, num_bytes);
 	}
 
-	num_written = aa_i2c_write(handle, slv_addr >> 1, AA_I2C_NO_FLAGS,
-	                           num_bytes, &data[1]);
-
+	num_written = aa_i2c_write(handle, slv_addr, AA_I2C_NO_FLAGS, num_bytes, &data[1]);
 	if (smbus_verify_byte_written(num_bytes, num_written))
 		return -1;
 
 	return 0;
 }
 
-int smbus_write32(Aardvark handle, u8 slv_addr, u8 cmd_code, u32 u32_data,
-                  bool pec_flag)
+int smbus_write32(Aardvark handle, u8 slv_addr, u8 cmd_code, u32 u32_data, bool pec_flag)
 {
 	int num_written, num_bytes;
-	data[0] = slv_addr;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	data[1] = cmd_code;
-	data[2] = u32_data & 0xFF;
-	data[3] = (u32_data >> 8) & 0xFF;
+	data[2] = (u32_data >>  0) & 0xFF;
+	data[3] = (u32_data >>  8) & 0xFF;
 	data[4] = (u32_data >> 16) & 0xFF;
-	data[5] = u32_data >> 24;
+	data[5] = (u32_data >> 24);
 	num_bytes = 5;
 
 	if (pec_flag) {
@@ -181,29 +171,26 @@ int smbus_write32(Aardvark handle, u8 slv_addr, u8 cmd_code, u32 u32_data,
 		data[num_bytes] = crc8(data, num_bytes);
 	}
 
-	num_written = aa_i2c_write(handle, slv_addr >> 1, AA_I2C_NO_FLAGS,
-	                           num_bytes, &data[1]);
-
+	num_written = aa_i2c_write(handle, slv_addr, AA_I2C_NO_FLAGS, num_bytes, &data[1]);
 	if (smbus_verify_byte_written(num_bytes, num_written))
 		return -1;
 
 	return 0;
 }
 
-int smbus_write64(Aardvark handle, u8 slv_addr, u8 cmd_code, u64 u64_data,
-                  bool pec_flag)
+int smbus_write64(Aardvark handle, u8 slv_addr, u8 cmd_code, u64 u64_data, bool pec_flag)
 {
 	int num_written, num_bytes;
-	data[0] = slv_addr;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	data[1] = cmd_code;
-	data[2] = u64_data & 0xFF;
-	data[3] = (u64_data >> 8) & 0xFF;
+	data[2] = (u64_data >>  0) & 0xFF;
+	data[3] = (u64_data >>  8) & 0xFF;
 	data[4] = (u64_data >> 16) & 0xFF;
 	data[5] = (u64_data >> 24) & 0xFF;
 	data[6] = (u64_data >> 32) & 0xFF;
 	data[7] = (u64_data >> 40) & 0xFF;
 	data[8] = (u64_data >> 48) & 0xFF;
-	data[9] = u64_data >> 56;
+	data[9] = (u64_data >> 56);
 	num_bytes = 9;
 
 	if (pec_flag) {
@@ -211,17 +198,15 @@ int smbus_write64(Aardvark handle, u8 slv_addr, u8 cmd_code, u64 u64_data,
 		data[num_bytes] = crc8(data, num_bytes);
 	}
 
-	num_written = aa_i2c_write(handle, slv_addr >> 1, AA_I2C_NO_FLAGS,
-	                           num_bytes, &data[1]);
-
+	num_written = aa_i2c_write(handle, slv_addr, AA_I2C_NO_FLAGS, num_bytes, &data[1]);
 	if (smbus_verify_byte_written(num_bytes, num_written))
 		return -1;
 
 	return 0;
 }
 
-int smbus_block_write(Aardvark handle, u8 slv_addr, u8 cmd_code,
-                      u8 byte_cnt, const void *buf, u8 pec_flag)
+int smbus_block_write(Aardvark handle, u8 slv_addr, u8 cmd_code, u8 byte_cnt,
+                      const void *buf, u8 pec_flag)
 {
 	int ret, status;
 	u16 num_bytes, num_written;
@@ -239,8 +224,7 @@ int smbus_block_write(Aardvark handle, u8 slv_addr, u8 cmd_code,
 			data[num_bytes] = data[num_bytes] ^ 0xFF;
 	}
 
-	status = aa_i2c_write_ext(handle, slv_addr, AA_I2C_NO_FLAGS,
-	                          num_bytes, &data[1], &num_written);
+	status = aa_i2c_write_ext(handle, slv_addr, AA_I2C_NO_FLAGS, num_bytes, &data[1], &num_written);
 	if (status) {
 		smbus_trace(ERROR, "aa_i2c_write_ext (%d)\n", status);
 		ret = -SMBUS_CMD_WRITE_FAILED;
@@ -248,8 +232,7 @@ int smbus_block_write(Aardvark handle, u8 slv_addr, u8 cmd_code,
 	}
 
 	if (smbus_verify_byte_written(num_bytes, num_written)) {
-		smbus_trace(ERROR, "num written mismatch (%d,%d)\n",
-		            num_bytes, num_written);
+		smbus_trace(ERROR, "num written mismatch (%d,%d)\n", num_bytes, num_written);
 		ret = -SMBUS_CMD_NUM_WRITTEN_MISMATCH;
 		goto dump;
 	}
@@ -261,8 +244,8 @@ dump:
 	return ret;
 }
 
-int smbus_write_file(Aardvark handle, u8 slv_addr, u8 cmd_code,
-                     const char *file_name, bool pec_flag)
+int smbus_write_file(Aardvark handle, u8 slv_addr, u8 cmd_code, const char *file_name,
+                     bool pec_flag)
 {
 	int ret, status;
 	FILE *file;
@@ -283,7 +266,7 @@ int smbus_write_file(Aardvark handle, u8 slv_addr, u8 cmd_code,
 		if (!byte_cnt)
 			break;
 
-		data[0] = slv_addr << 1;
+		data[0] = slv_addr << 1 | I2C_WRITE;
 		data[1] = cmd_code;
 		data[2] = byte_cnt;
 		// data[3:byte_cnt + 2]
@@ -295,8 +278,8 @@ int smbus_write_file(Aardvark handle, u8 slv_addr, u8 cmd_code,
 		}
 
 		// Write the data to the bus
-		status = aa_i2c_write_ext(handle, slv_addr, AA_I2C_NO_FLAGS,
-		                          num_bytes, &data[1], &num_written);
+		status = aa_i2c_write_ext(handle, slv_addr, AA_I2C_NO_FLAGS, num_bytes,
+		                          &data[1], &num_written);
 		if (status) {
 			smbus_trace(ERROR, "aa_i2c_write_ext (%d)\n", status);
 			ret = -SMBUS_CMD_WRITE_FAILED;
@@ -304,8 +287,8 @@ int smbus_write_file(Aardvark handle, u8 slv_addr, u8 cmd_code,
 		}
 
 		if (smbus_verify_byte_written(num_bytes, num_written)) {
-			smbus_trace(ERROR, "smbus_verify_byte_written (%d,%d)\n",
-			            num_bytes, num_written);
+			smbus_trace(ERROR, "smbus_verify_byte_written (%d,%d)\n", num_bytes,
+			            num_written);
 			ret = -SMBUS_CMD_NUM_WRITTEN_MISMATCH;
 			goto cleanup;
 		}
@@ -339,7 +322,7 @@ int smbus_arp_cmd_prepare_to_arp(Aardvark handle, bool pec_flag)
 	memset(p, 0, sizeof(*p));
 
 	u8 slv_addr = SMBUS_ADDR_DEFAULT;
-	data[0] = slv_addr << 1;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	data[1] = SMBUS_ARP_PREPARE_TO_ARP;
 	num_bytes = 1;
 	if (pec_flag) {
@@ -356,8 +339,7 @@ int smbus_arp_cmd_prepare_to_arp(Aardvark handle, bool pec_flag)
 	}
 
 	if (smbus_verify_byte_written(num_bytes, num_written)) {
-		smbus_trace(ERROR, "smbus_verify_byte_written (%d,%d)\n",
-		            num_bytes, num_written);
+		smbus_trace(ERROR, "smbus_verify_byte_written (%d,%d)\n", num_bytes, num_written);
 		ret = -SMBUS_CMD_NUM_WRITTEN_MISMATCH;
 		goto dump;
 	}
@@ -374,8 +356,8 @@ dump:
  * return their target address along with their UDID. If directed = 1, then this
  * command requests a specific ARP-capable device to return its Unique Identifier.
  */
-int smbus_arp_cmd_get_udid(Aardvark handle, void *udid, u8 tar_addr,
-                           bool directed, bool pec_flag)
+int smbus_arp_cmd_get_udid(Aardvark handle, void *udid, u8 tar_addr, bool directed,
+                           bool pec_flag)
 {
 	int ret, status;
 	u16 num_bytes, num_written, num_read;
@@ -385,7 +367,7 @@ int smbus_arp_cmd_get_udid(Aardvark handle, void *udid, u8 tar_addr,
 	memset(p, 0, sizeof(*p));
 
 	u8 slv_addr = SMBUS_ADDR_DEFAULT;
-	data[0] = slv_addr << 1;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	if (directed)
 		data[1] = tar_addr << 1 | I2C_READ;
 	else
@@ -418,8 +400,7 @@ int smbus_arp_cmd_get_udid(Aardvark handle, void *udid, u8 tar_addr,
 	if (pec_flag) {
 		pec = crc8(data, num_bytes);
 		if (p->pec != pec) {
-			smbus_trace(ERROR, "[%s]:pec mismatch (%02x,%02x)\n",
-			            __func__, p->pec, pec);
+			smbus_trace(ERROR, "[%s]:pec mismatch (%02x,%02x)\n", __func__, p->pec, pec);
 			ret = -SMBUS_PEC_ERR;
 			goto dump;
 		}
@@ -432,8 +413,7 @@ int smbus_arp_cmd_get_udid(Aardvark handle, void *udid, u8 tar_addr,
 	}
 
 	if (!(p->dev_tar_addr & 1)) {
-		smbus_trace(ERROR, "device target address error (%02x)\n",
-		            p->dev_tar_addr);
+		smbus_trace(ERROR, "device target address error (%02x)\n", p->dev_tar_addr);
 		ret = -SMBUS_CMD_DEV_TAR_ADDR_ERR;
 		goto dump;
 	}
@@ -451,8 +431,7 @@ dump:
  * their initial state. If directed = 1, then this command forces a specific
  * non-PTA, ARP-capable device to return to its initial state.
  */
-int smbus_arp_cmd_reset_device(Aardvark handle, u8 tar_addr, u8 directed,
-                               bool pec_flag)
+int smbus_arp_cmd_reset_device(Aardvark handle, u8 tar_addr, u8 directed, bool pec_flag)
 {
 	int ret, status;
 	u16 num_bytes, num_written;
@@ -462,7 +441,7 @@ int smbus_arp_cmd_reset_device(Aardvark handle, u8 tar_addr, u8 directed,
 	memset(p, 0, sizeof(*p));
 
 	slv_addr = SMBUS_ADDR_DEFAULT;
-	data[0] = slv_addr << 1;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	if (directed)
 		data[1] = tar_addr << 1 | I2C_WRITE;
 	else
@@ -481,8 +460,7 @@ int smbus_arp_cmd_reset_device(Aardvark handle, u8 tar_addr, u8 directed,
 	}
 
 	if (smbus_verify_byte_written(num_bytes, num_written)) {
-		smbus_trace(ERROR, "num written mismatch (%d,%d)\n",
-		            num_bytes, num_written);
+		smbus_trace(ERROR, "num written mismatch (%d,%d)\n", num_bytes, num_written);
 		ret = -SMBUS_CMD_NUM_WRITTEN_MISMATCH;
 		goto dump;
 	}
@@ -508,7 +486,7 @@ int smbus_arp_cmd_assign_address(Aardvark handle, const union udid_ds *udid,
 	memset(p, 0, sizeof(*p));
 
 	u8 slv_addr = SMBUS_ADDR_DEFAULT;
-	data[0] = slv_addr << 1;
+	data[0] = slv_addr << 1 | I2C_WRITE;
 	data[1] = SMBUS_ARP_ASSIGN_ADDRESS;
 	data[2] = sizeof(*udid) + 1;
 	// Byte[18:3]
@@ -529,8 +507,8 @@ int smbus_arp_cmd_assign_address(Aardvark handle, const union udid_ds *udid,
 	}
 
 	if (smbus_verify_byte_written(num_bytes, num_written)) {
-		smbus_trace(ERROR, "[%s]:num written mismatch (%d,%d)\n",
-		            __func__, num_bytes, num_written);
+		smbus_trace(ERROR, "[%s]:num written mismatch (%d,%d)\n", __func__,
+		            num_bytes, num_written);
 		ret = -SMBUS_CMD_NUM_WRITTEN_MISMATCH;
 		goto dump;
 	}
@@ -542,9 +520,8 @@ dump:
 	return ret;
 }
 
-int smbus_slave_poll(
-        Aardvark handle, int timeout_ms, bool pec_flag,
-        int (*callback)(const void *, u32))
+int smbus_slave_poll(Aardvark handle, int timeout_ms, bool pec_flag,
+                     int (*fn)(const void *, u32))
 {
 	int ret, status;
 	int trans_num = 0;
@@ -571,9 +548,8 @@ int smbus_slave_poll(
 			 * since we have already checked for data using aa_async_poll, the
 			 * timeout should never be exercised.
 			 */
-			status = aa_i2c_slave_read_ext(
-			                 handle, &slv_addr, SMBUS_BUF_MAX, &data[1],
-			                 &num_read);
+			status = aa_i2c_slave_read_ext(handle, &slv_addr, SMBUS_BUF_MAX,
+			                               &data[1], &num_read);
 			if (status) {
 				smbus_trace(ERROR, "aa_i2c_slave_read_ext (%d)\n", status);
 				ret = -SMBUS_SLV_READ_FAILED;
@@ -584,8 +560,7 @@ int smbus_slave_poll(
 			num_read = num_read + 1;
 
 			// Dump the data to the screen
-			smbus_trace(INFO, "transaction #%d (%d)\n",
-			            trans_num, num_read);
+			smbus_trace(INFO, "transaction #%d (%d)\n", trans_num, num_read);
 			print_buf(data, num_read, "data read from smbus:\n");
 
 			if (pec_flag) {
@@ -597,10 +572,10 @@ int smbus_slave_poll(
 				}
 			}
 
-			if (callback) {
-				status = callback(data, num_read + 1);
+			if (fn) {
+				status = fn(data, num_read + 1);
 				if (status)
-					smbus_trace(WARN, "callback (%d)\n", status);
+					smbus_trace(WARN, "fn (%d)\n", status);
 				break;
 			}
 			++trans_num;
@@ -648,8 +623,7 @@ void print_udid(const union udid_ds *udid)
 	smbus_trace(INFO, "udid->dev_cap.value = %x\n", udid->dev_cap.value);
 	smbus_trace(INFO, "PEC Supported = %d\n", udid->dev_cap.pec_sup);
 
-	smbus_trace(INFO, "Address Type = %s (%d)\n",
-	            smbus_addr_type[udid->dev_cap.addr_type],
+	smbus_trace(INFO, "Address Type = %s (%d)\n", smbus_addr_type[udid->dev_cap.addr_type],
 	            udid->dev_cap.addr_type);
 
 	smbus_trace(INFO, "udid->ver_rev.value = %d\n", udid->ver_rev.value);
